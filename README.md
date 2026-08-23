@@ -8,6 +8,19 @@ creates a real, valid canvas so that the surrounding machinery is in place for i
 
 ---
 
+## Install
+
+Grab the APK from the [latest release](https://github.com/JustRin/ps-mobile/releases/latest)
+and install it. Android 8.0 or newer.
+
+The app is not in any store, so it updates itself: it checks this repository's releases, and
+when a newer one appears it downloads the APK, confirms the signing certificate matches the
+installed build, and hands it to the system installer — the confirmation and progress you see
+are Android's own. Every release is signed with the same key by CI, which is what makes updating
+in place possible. The check can be turned off in Settings.
+
+---
+
 ## What it does
 
 - **Opens PSD and PSB** of any size the formats allow — verified on an 812 MB, 800 × 247 517 px
