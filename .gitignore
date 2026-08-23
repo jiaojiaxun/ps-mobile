@@ -1,0 +1,25 @@
+# Build output
+build/
+.gradle/
+.kotlin/
+captures/
+*.apk
+*.aab
+*.aar
+
+# Local machine configuration
+local.properties
+keystore.properties
+*.jks
+*.keystore
+*.p12
+
+# IDE
+.idea/
+*.iml
+.externalNativeBuild
+.cxx
+
+# OS
+.DS_Store
+Thumbs.db

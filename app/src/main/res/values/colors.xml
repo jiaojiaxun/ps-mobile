@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="canvas_background">#FF1B1B1F</color>
+    <color name="brand_ink">#FF0B1B2B</color>
+    <color name="brand_accent">#FF31A8FF</color>
+</resources>

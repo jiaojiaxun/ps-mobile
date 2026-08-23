@@ -1,0 +1,10 @@
+# Normalise line endings so the repository is identical on every platform.
+* text=auto eol=lf
+
+# Windows scripts must keep CRLF to remain runnable.
+*.bat text eol=crlf
+
+*.jar binary
+*.png binary
+*.jpg binary
+*.apk binary

@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PS Mobile</string>
+
+    <!-- Home -->
+    <string name="home_greeting">Документы</string>
+    <string name="home_subtitle">Photoshop-документы на телефоне</string>
+    <string name="action_open">Открыть файл</string>
+    <string name="action_open_hint">PSD или PSB с устройства</string>
+    <string name="action_new">Новый документ</string>
+    <string name="action_new_hint">Пустой холст</string>
+    <string name="recent_title">Недавние</string>
+    <string name="recent_empty_title">Пока пусто</string>
+    <string name="recent_empty_body">Открытые документы появятся здесь</string>
+    <string name="recent_clear">Очистить список</string>
+    <string name="recent_remove">Убрать из списка</string>
+
+    <!-- New document -->
+    <string name="new_doc_title">Новый документ</string>
+    <string name="new_doc_name">Имя</string>
+    <string name="new_doc_width">Ширина</string>
+    <string name="new_doc_height">Высота</string>
+    <string name="new_doc_resolution">Разрешение</string>
+    <string name="new_doc_color_mode">Цветовой режим</string>
+    <string name="new_doc_background">Фон</string>
+    <string name="new_doc_presets">Пресеты</string>
+    <string name="new_doc_create">Создать</string>
+    <string name="new_doc_preview_note">Редактирование появится в следующих версиях — пока холст можно только создать и рассмотреть.</string>
+
+    <!-- Loading -->
+    <string name="loading_opening">Открываю файл</string>
+    <string name="loading_header">Читаю заголовок</string>
+    <string name="loading_resources">Ресурсы документа</string>
+    <string name="loading_layers">Разбираю слои</string>
+    <string name="loading_indexing">Индексирую строки</string>
+    <string name="loading_preview">Готовлю превью</string>
+    <string name="loading_done">Готово</string>
+    <string name="loading_cancel">Отменить</string>
+
+    <!-- Viewer -->
+    <string name="viewer_layers">Слои</string>
+    <string name="viewer_info">Свойства</string>
+    <string name="viewer_fit">Вписать</string>
+    <string name="viewer_back">Назад</string>
+    <string name="viewer_no_composite">В файле нет сведённого превью — собираю изображение из слоёв.</string>
+    <string name="viewer_layers_empty">Слоёв нет</string>
+    <string name="viewer_layer_hidden">скрыт</string>
+
+    <!-- Info panel -->
+    <string name="info_format">Формат</string>
+    <string name="info_size">Размер холста</string>
+    <string name="info_depth">Глубина цвета</string>
+    <string name="info_depth_value">%1$d бит/канал</string>
+    <string name="info_color_mode">Цветовой режим</string>
+    <string name="info_channels">Каналов</string>
+    <string name="info_layers">Слоёв</string>
+    <string name="info_resolution">Разрешение</string>
+    <string name="info_file_size">Размер файла</string>
+    <string name="info_composite">Сведённое превью</string>
+    <string name="info_yes">есть</string>
+    <string name="info_no">нет</string>
+    <string name="info_megapixels">Мегапикселей</string>
+
+    <!-- Errors -->
+    <string name="error_title">Не удалось открыть</string>
+    <string name="error_retry">Повторить</string>
+    <string name="error_dismiss">К документам</string>
+    <string name="error_unsupported">Файл не является документом Photoshop</string>
+    <string name="error_no_access">Нет доступа к файлу — откройте его заново</string>
+    <string name="error_generic">Что-то пошло не так</string>
+
+    <!-- Relative time in the recents list -->
+    <string name="time_now">только что</string>
+    <string name="time_minutes">%1$d мин</string>
+    <string name="time_hours">%1$d ч</string>
+    <string name="time_days">%1$d дн</string>
+    <string name="time_weeks">%1$d нед</string>
+    <string name="time_months">%1$d мес</string>
+    <string name="time_years">%1$d г</string>
+    <string name="recent_layers">%1$d сл.</string>
+
+    <!-- New document presets and options -->
+    <string name="new_doc_default_name">Без имени 1</string>
+    <string name="preset_phone">Экран телефона</string>
+    <string name="preset_square">Квадрат 1080</string>
+    <string name="preset_fullhd">Full HD</string>
+    <string name="preset_webtoon">Вебтун</string>
+    <string name="preset_a4">A4, 300 dpi</string>
+    <string name="preset_4k">4K</string>
+    <string name="background_white">Белый</string>
+    <string name="background_black">Чёрный</string>
+    <string name="background_transparent">Прозрачный</string>
+
+    <!-- File browser -->
+    <string name="browser_title">Открыть</string>
+    <string name="browser_search_hint">Поиск по имени</string>
+    <string name="browser_scan">Найти все PSD/PSB</string>
+    <string name="browser_scanning">Ищу по устройству…</string>
+    <string name="browser_scan_results">Найдено: %1$d</string>
+    <string name="browser_stop">Остановить</string>
+    <string name="browser_access_title">Нужен доступ к файлам</string>
+    <string name="browser_access_body">Чтобы показывать только PSD и PSB и искать их по всему устройству, приложению нужен доступ ко всем файлам.</string>
+    <string name="browser_access_grant">Разрешить доступ</string>
+    <string name="browser_pick_folder">Выбрать папку</string>
+    <string name="browser_pick_folder_hint">Без полного доступа — дайте доступ к отдельной папке</string>
+    <string name="browser_system_picker">Системный выбор файла</string>
+    <string name="browser_empty">Здесь нет PSD или PSB</string>
+    <string name="browser_empty_hint">Загляните в другую папку или запустите поиск по устройству</string>
+    <string name="browser_internal_storage">Внутренняя память</string>
+    <string name="browser_roots">Где искать</string>
+    <string name="browser_forget_folder">Убрать папку</string>
+    <string name="browser_quick">Быстрый переход</string>
+    <string name="browser_up">Вверх</string>
+    <string name="browser_folder">папка</string>
+
+    <!-- Layer visibility and navigation -->
+    <string name="viewer_layer_hide">Скрыть слой</string>
+    <string name="viewer_layer_show">Показать слой</string>
+    <string name="viewer_layers_reset">Вернуть как в файле</string>
+    <string name="viewer_live_composite">Видимость изменена — собираю изображение из слоёв.</string>
+
+    <!-- Settings -->
+    <string name="home_settings">Настройки</string>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_section_appearance">Вид</string>
+    <string name="settings_language">Язык интерфейса</string>
+    <string name="settings_language_system">Системный</string>
+    <string name="settings_language_ru">Русский</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_background">Фон вокруг холста</string>
+    <string name="settings_background_dark">Тёмный</string>
+    <string name="settings_background_black">Чёрный</string>
+    <string name="settings_background_light">Светлый</string>
+    <string name="settings_checkerboard">Шахматка прозрачности</string>
+    <string name="settings_checkerboard_hint">Клетки там, где в документе нет пикселей</string>
+    <string name="settings_section_viewer">Просмотр</string>
+    <string name="settings_zoom">Начальный масштаб</string>
+    <string name="settings_zoom_auto">Авто</string>
+    <string name="settings_zoom_fit">Целиком</string>
+    <string name="settings_zoom_fill_width">По ширине</string>
+    <string name="settings_zoom_actual">100%</string>
+    <string name="settings_zoom_hint">Авто вписывает документ, но у длинных полос разворачивает по ширине</string>
+    <string name="settings_smooth">Сглаживание</string>
+    <string name="settings_smooth_hint">Интерполяция при масштабировании. Выключите для пиксель-арта.</string>
+    <string name="settings_quality">Качество при отдалении</string>
+    <string name="settings_quality_fast">Быстро</string>
+    <string name="settings_quality_balanced">Баланс</string>
+    <string name="settings_quality_high">Максимум</string>
+    <string name="settings_quality_hint">Больше выборок на пиксель — чище картинка, дольше отрисовка</string>
+    <string name="settings_section_files">Файлы</string>
+    <string name="settings_scan">Искать по устройству при открытии</string>
+    <string name="settings_scan_hint">Сразу показывать все найденные PSD и PSB</string>
+    <string name="settings_previews">Превью в списке файлов</string>
+    <string name="settings_previews_hint">Рисовать миниатюру каждого документа</string>
+    <string name="settings_access">Доступ ко всем файлам</string>
+    <string name="settings_access_granted">Разрешён</string>
+    <string name="settings_access_denied">Не разрешён — нажмите, чтобы выдать</string>
+    <string name="settings_section_data">Данные</string>
+    <string name="settings_clear_recents">Очистить список недавних</string>
+    <string name="settings_clear_cache">Очистить кэш превью</string>
+    <string name="settings_done">Готово</string>
+    <string name="settings_section_about">О приложении</string>
+    <string name="settings_version">Версия</string>
+    <string name="settings_formats">Форматы</string>
+    <string name="settings_formats_value">PSD и PSB · 1/8/16/32 бита · RGB, Grayscale, CMYK, Lab, Indexed, Bitmap, Duotone</string>
+
+    <!-- Updates -->
+    <string name="settings_section_updates">Обновления</string>
+    <string name="settings_auto_updates">Проверять обновления</string>
+    <string name="settings_auto_updates_hint">Раз в несколько часов спрашивать GitHub о новой версии</string>
+    <string name="update_check">Проверить сейчас</string>
+    <string name="update_checking">Проверяю…</string>
+    <string name="update_up_to_date">Установлена последняя версия</string>
+    <string name="update_available">Доступна версия %1$s</string>
+    <string name="update_download">Скачать и установить</string>
+    <string name="update_downloading">Загрузка… %1$d%%</string>
+    <string name="update_verifying">Проверяю подпись…</string>
+    <string name="update_installing">Установка — подтвердите в системном окне</string>
+    <string name="update_needs_permission">Разрешите установку из этого приложения</string>
+    <string name="update_grant_permission">Открыть настройки</string>
+    <string name="update_failed_network">Не удалось получить данные о релизе</string>
+    <string name="update_failed_signature">Подпись файла не совпадает с установленной версией. Установка отменена.</string>
+    <string name="update_failed_install">Установка не завершилась</string>
+    <string name="update_dismiss">Скрыть</string>
+    <string name="update_banner">Доступно обновление %1$s</string>
+    <string name="update_banner_action">Обновить</string>
+    <string name="update_notes">Что нового</string>
+</resources>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        The in-app browser lists only Photoshop documents, which means it has to see the
+        filesystem itself; the system picker cannot filter by extension. Without this the
+        browser falls back to per-folder grants through ACTION_OPEN_DOCUMENT_TREE.
+    -->
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+
+    <!-- Checking GitHub for a newer release, and fetching it. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+        The app is distributed outside any store, so it updates itself from its own GitHub
+        releases. The APK's signing certificate is checked against this installation before the
+        platform installer is ever invoked; the confirmation the user sees is the system's own.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <!-- file:// documents handed over by older file managers -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <application
+        android:name=".PsApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:hardwareAccelerated="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.PsMobile"
+        tools:targetApi="34">
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|density|smallestScreenSize"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/Theme.PsMobile.Splash"
+            android:windowSoftInputMode="adjustResize">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!--
+                Opening a document. Three filters are needed in practice:
+                by declared MIME type, by file extension for providers that report a generic
+                type, and for plain file:// paths.
+            -->
+            <intent-filter android:priority="100">
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.EDIT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:mimeType="image/vnd.adobe.photoshop" />
+                <data android:mimeType="image/photoshop" />
+                <data android:mimeType="image/x-photoshop" />
+                <data android:mimeType="image/psd" />
+                <data android:mimeType="image/x-psd" />
+                <data android:mimeType="application/photoshop" />
+                <data android:mimeType="application/psd" />
+                <data android:mimeType="application/x-photoshop" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
+
+            <intent-filter android:priority="100">
+                <action android:name="android.intent.action.VIEW" />
+                <action android:name="android.intent.action.EDIT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />
+
+                <!-- Android's matcher does not backtrack across dots, so each depth is listed. -->
+                <data android:pathPattern=".*\\.psd" />
+                <data android:pathPattern=".*\\..*\\.psd" />
+                <data android:pathPattern=".*\\..*\\..*\\.psd" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.psd" />
+                <data android:pathPattern=".*\\.PSD" />
+                <data android:pathPattern=".*\\..*\\.PSD" />
+                <data android:pathPattern=".*\\.psb" />
+                <data android:pathPattern=".*\\..*\\.psb" />
+                <data android:pathPattern=".*\\..*\\..*\\.psb" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.psb" />
+                <data android:pathPattern=".*\\.PSB" />
+                <data android:pathPattern=".*\\..*\\.PSB" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/vnd.adobe.photoshop" />
+                <data android:mimeType="application/octet-stream" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".update.InstallResultReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Only the recents index is worth carrying to a new device. Thumbnails are regenerated the
+    next time a document is opened, and anything not listed here is excluded by default.
+-->
+<full-backup-content>
+    <include domain="file" path="recent" />
+</full-backup-content>
