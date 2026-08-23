@@ -10,6 +10,12 @@ import com.psmobile.psd.model.Layer
 import com.psmobile.psd.model.LayerNode
 import com.psmobile.psd.render.LayerRenderer
 import com.psmobile.psd.render.LayerVisibility
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import java.io.Closeable
 
 /** A rectangle in document coordinates. */
@@ -36,6 +42,10 @@ class DocumentSession(
 ) : Closeable {
 
     val tiles = TileEngine(document, supersample = supersample)
+
+    /** Owns the background work this session starts, so closing it stops everything at once. */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var visibilityJob: Job? = null
 
     /** Only built when something actually asks for a per-layer preview. */
     val layerRenderer: LayerRenderer by lazy { LayerRenderer(document) }
@@ -65,29 +75,41 @@ class DocumentSession(
      * The flattened preview in the file can only show the state the document was saved in, so
      * the first change moves rendering onto the live layer compositor; undoing every change
      * moves it back.
+     *
+     * The eye icon updates immediately and the re-render happens in the background. Crucially
+     * the previous re-render is cancelled first: without that, flipping several layers in a row
+     * left one whole-canvas composite per tap running at once, all competing for the same cores,
+     * which is what made the app stop responding.
      */
-    suspend fun toggleVisibility(layer: Layer) {
+    fun toggleVisibility(layer: Layer) {
         val next = !isVisible(layer)
         if (next == layer.isVisible) visibilityOverrides.remove(layer.index)
         else visibilityOverrides[layer.index] = next
+        applyVisibility()
+    }
 
+    fun resetVisibility() {
+        if (visibilityOverrides.isEmpty()) return
+        visibilityOverrides.clear()
+        applyVisibility()
+    }
+
+    private fun applyVisibility() {
         val override = if (visibilityOverrides.isEmpty()) {
             null
         } else {
             val snapshot = visibilityOverrides.toMap()
             LayerVisibility { snapshot[it.index] ?: it.isVisible }
         }
-        tiles.setVisibilityOverride(override)
         visibilityRevision++
-        tiles.primeOverview(force = true)
-    }
 
-    suspend fun resetVisibility() {
-        if (visibilityOverrides.isEmpty()) return
-        visibilityOverrides.clear()
-        tiles.setVisibilityOverride(null)
-        visibilityRevision++
-        tiles.primeOverview(force = true)
+        visibilityJob?.cancel()
+        visibilityJob = scope.launch {
+            // Rebuilding the draw order and re-priming both belong off the main thread; the
+            // caller only ever sees the state flip, which is what keeps the panel responsive.
+            tiles.setVisibilityOverride(override)
+            tiles.primeOverview(force = true)
+        }
     }
 
     /**
@@ -128,6 +150,7 @@ class DocumentSession(
     override fun close() {
         if (closed) return
         closed = true
+        scope.cancel()
         tiles.release()
         runCatching { document.close() }
     }

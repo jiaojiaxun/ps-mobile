@@ -182,7 +182,7 @@ private fun LayerRowItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onFocus)
-            .padding(start = (6 + row.depth * 15).dp, end = 8.dp, top = 7.dp, bottom = 7.dp),
+            .padding(start = (2 + row.depth * 14).dp, end = 8.dp, top = 5.dp, bottom = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -193,17 +193,19 @@ private fun LayerRowItem(
                 .background(label),
         )
 
-        IconButton(onClick = onToggleVisibility, modifier = Modifier.size(38.dp)) {
+        // A full touch target: tapping the row jumps the canvas to the layer, so an eye that is
+        // any smaller turns a near miss into an unexpected navigation.
+        IconButton(onClick = onToggleVisibility, modifier = Modifier.size(48.dp)) {
             Icon(
                 imageVector = if (visible) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
                 contentDescription = stringResource(
                     if (visible) R.string.viewer_layer_hide else R.string.viewer_layer_show,
                 ),
                 tint = if (visible) PsColors.TextSecondary else PsColors.Ink300,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(19.dp),
             )
         }
-        Spacer(Modifier.width(4.dp))
+        Spacer(Modifier.width(2.dp))
 
         Box(Modifier.alpha(if (visible) 1f else 0.4f)) {
             LayerPreview(session, layer, row.node.isGroup)

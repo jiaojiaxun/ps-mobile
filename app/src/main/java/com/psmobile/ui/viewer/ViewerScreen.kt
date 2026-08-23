@@ -184,8 +184,8 @@ fun ViewerScreen(
         ViewerPanel.LAYERS -> LayersPanel(
             session = session,
             onFocusLayer = ::focusOn,
-            onToggleVisibility = { layer -> scope.launch { session.toggleVisibility(layer) } },
-            onResetVisibility = { scope.launch { session.resetVisibility() } },
+            onToggleVisibility = session::toggleVisibility,
+            onResetVisibility = session::resetVisibility,
             onDismiss = { panel = ViewerPanel.NONE },
         )
         ViewerPanel.INFO -> InfoPanel(session) { panel = ViewerPanel.NONE }

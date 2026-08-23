@@ -75,7 +75,13 @@ class TileEngine(
 
     val pyramid: TilePyramid = compositeRenderer.pyramid
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(WORKERS))
+    /**
+     * Every decode runs here. Bounding it matters: the overview and the visible tiles are both
+     * heavy when compositing from layers, and letting them onto the unbounded IO pool meant they
+     * multiplied instead of queueing.
+     */
+    private val decodeDispatcher = Dispatchers.IO.limitedParallelism(WORKERS)
+    private val scope = CoroutineScope(SupervisorJob() + decodeDispatcher)
     private val gate = Semaphore(WORKERS)
 
     @Volatile
@@ -152,7 +158,7 @@ class TileEngine(
      * Renders the coarsest level synchronously so the viewer has a complete, if blurry, image
      * from the very first frame. There are only a handful of tiles at the top of the pyramid.
      */
-    suspend fun primeOverview(force: Boolean = false) = withContext(Dispatchers.IO) {
+    suspend fun primeOverview(force: Boolean = false) = withContext(decodeDispatcher) {
         val startedAt = SystemClock.elapsedRealtime()
         val level = pyramid.maxLevel
         for (row in 0 until pyramid.rows(level)) {
@@ -238,7 +244,7 @@ class TileEngine(
      * with an extreme aspect ratio get a square crop of their opening instead — the part a
      * person would actually recognise.
      */
-    suspend fun renderThumbnail(maxSize: Int): Bitmap? = withContext(Dispatchers.IO) {
+    suspend fun renderThumbnail(maxSize: Int): Bitmap? = withContext(decodeDispatcher) {
         val docWidth = document.width
         val docHeight = document.height
         val longest = maxOf(docWidth, docHeight)
