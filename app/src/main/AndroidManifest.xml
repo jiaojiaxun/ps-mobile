@@ -14,13 +14,6 @@
     <!-- Checking GitHub for a newer release, and fetching it. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!--
-        The app is distributed outside any store, so it updates itself from its own GitHub
-        releases. The APK's signing certificate is checked against this installation before the
-        platform installer is ever invoked; the confirmation the user sees is the system's own.
-    -->
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-
     <!-- file:// documents handed over by older file managers -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -108,9 +101,5 @@
                 <data android:mimeType="application/octet-stream" />
             </intent-filter>
         </activity>
-
-        <receiver
-            android:name=".update.InstallResultReceiver"
-            android:exported="false" />
     </application>
 </manifest>

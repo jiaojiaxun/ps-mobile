@@ -72,8 +72,7 @@ fun SettingsScreen(
     onClearRecents: () -> Unit,
     onClearPreviewCache: () -> Unit,
     onCheckUpdates: () -> Unit,
-    onInstallUpdate: () -> Unit,
-    onGrantInstallPermission: () -> Unit,
+    onOpenRelease: () -> Unit,
     onDismissUpdate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -191,8 +190,7 @@ fun SettingsScreen(
                         state = updateState,
                         currentVersion = appVersion,
                         onCheck = onCheckUpdates,
-                        onInstall = onInstallUpdate,
-                        onGrantPermission = onGrantInstallPermission,
+                        onOpenRelease = onOpenRelease,
                         onDismiss = onDismissUpdate,
                     )
                     SwitchRow(

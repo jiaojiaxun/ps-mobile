@@ -166,15 +166,9 @@
     <string name="update_checking">Checking…</string>
     <string name="update_up_to_date">You have the latest version</string>
     <string name="update_available">Version %1$s is available</string>
-    <string name="update_download">Download and install</string>
-    <string name="update_downloading">Downloading… %1$d%%</string>
-    <string name="update_verifying">Checking the signature…</string>
-    <string name="update_installing">Installing — confirm in the system dialog</string>
-    <string name="update_needs_permission">Allow installing apps from PS Mobile</string>
-    <string name="update_grant_permission">Open settings</string>
+    <string name="update_download">Open the release page</string>
+    <string name="update_open_hint">The download and install go the usual way, through your browser and the system installer</string>
     <string name="update_failed_network">Could not reach the release feed</string>
-    <string name="update_failed_signature">The file is not signed like the installed version. Install cancelled.</string>
-    <string name="update_failed_install">The install did not finish</string>
     <string name="update_dismiss">Dismiss</string>
     <string name="update_banner">Update %1$s is available</string>
     <string name="update_banner_action">Update</string>

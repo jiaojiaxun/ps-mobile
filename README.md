@@ -10,14 +10,30 @@ creates a real, valid canvas so that the surrounding machinery is in place for i
 
 ## Install
 
-Grab the APK from the [latest release](https://github.com/JustRin/ps-mobile/releases/latest)
-and install it. Android 8.0 or newer.
+Grab the APK from the [latest release](https://github.com/JustRin/ps-mobile/releases/latest).
+Android 8.0 or newer.
 
-The app is not in any store, so it updates itself: it checks this repository's releases, and
-when a newer one appears it downloads the APK, confirms the signing certificate matches the
-installed build, and hands it to the system installer — the confirmation and progress you see
-are Android's own. Every release is signed with the same key by CI, which is what makes updating
-in place possible. The check can be turned off in Settings.
+Every release is built and signed by CI with the same key, so updates install over the previous
+version without uninstalling.
+
+### Staying up to date
+
+The app checks this repository for newer releases and tells you when one appears; the button
+opens the release page and the download and install go the ordinary way, through your browser
+and the system installer. The check can be switched off in Settings.
+
+It deliberately does not install the update itself. That needs the `REQUEST_INSTALL_PACKAGES`
+permission, and a sideloaded app that downloads an APK and installs it is — to a heuristic —
+shaped exactly like a dropper. Google Play Protect blocks it with "Harmful app blocked", which
+is a false positive but one every user would have to click past. Not holding the permission
+avoids the problem entirely.
+
+For unattended updates use [Obtainium](https://github.com/ImranR98/Obtainium), which is built
+for tracking GitHub releases and holds the install permission itself. Add this repository to it:
+
+```
+https://github.com/JustRin/ps-mobile
+```
 
 ---
 

@@ -172,15 +172,9 @@
     <string name="update_checking">Проверяю…</string>
     <string name="update_up_to_date">Установлена последняя версия</string>
     <string name="update_available">Доступна версия %1$s</string>
-    <string name="update_download">Скачать и установить</string>
-    <string name="update_downloading">Загрузка… %1$d%%</string>
-    <string name="update_verifying">Проверяю подпись…</string>
-    <string name="update_installing">Установка — подтвердите в системном окне</string>
-    <string name="update_needs_permission">Разрешите установку из этого приложения</string>
-    <string name="update_grant_permission">Открыть настройки</string>
+    <string name="update_download">Открыть страницу релиза</string>
+    <string name="update_open_hint">Скачивание и установка пройдут обычным путём через браузер и системный установщик</string>
     <string name="update_failed_network">Не удалось получить данные о релизе</string>
-    <string name="update_failed_signature">Подпись файла не совпадает с установленной версией. Установка отменена.</string>
-    <string name="update_failed_install">Установка не завершилась</string>
     <string name="update_dismiss">Скрыть</string>
     <string name="update_banner">Доступно обновление %1$s</string>
     <string name="update_banner_action">Обновить</string>

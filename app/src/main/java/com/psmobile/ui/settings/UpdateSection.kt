@@ -1,8 +1,5 @@
 package com.psmobile.ui.settings
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -34,7 +30,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,17 +41,17 @@ import com.psmobile.util.formatFileSize
 /**
  * The update row in settings.
  *
- * It shows the whole sequence in place — checking, what was found, the download, the signature
- * check — because an app that installs itself owes the user a clear account of what it is about
- * to do. The final confirmation is the system installer's, not ours.
+ * Reports what is published and hands off to the browser. The app deliberately does not install
+ * the APK itself: doing so requires the install permission, and a sideloaded app that downloads
+ * and installs an APK trips Play Protect's dropper heuristic, putting a malware warning in front
+ * of every user for an update that is perfectly legitimate.
  */
 @Composable
 fun UpdateRow(
     state: UpdateState,
     currentVersion: String,
     onCheck: () -> Unit,
-    onInstall: () -> Unit,
-    onGrantPermission: () -> Unit,
+    onOpenRelease: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -83,39 +78,12 @@ fun UpdateRow(
                     color = PsColors.TextTertiary,
                 )
             }
-            if (state !is UpdateState.Checking &&
-                state !is UpdateState.Downloading &&
-                state !is UpdateState.Verifying
-            ) {
+            if (state !is UpdateState.Checking) {
                 TextButton(onClick = onCheck) {
                     Text(
                         text = stringResource(R.string.update_check),
                         style = MaterialTheme.typography.labelSmall,
                         color = PsColors.Accent,
-                    )
-                }
-            }
-        }
-
-        AnimatedVisibility(visible = state is UpdateState.Downloading) {
-            val progress = (state as? UpdateState.Downloading)?.progress ?: 0f
-            val animated by animateFloatAsState(progress, tween(180), label = "download")
-            Column(Modifier.padding(top = 10.dp)) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .clip(CircleShape)
-                        .background(PsColors.Ink500),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(animated.coerceIn(0f, 1f))
-                            .height(4.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.horizontalGradient(listOf(PsColors.AccentDim, PsColors.Accent)),
-                            ),
                     )
                 }
             }
@@ -140,7 +108,7 @@ fun UpdateRow(
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Button(
-                    onClick = onInstall,
+                    onClick = onOpenRelease,
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = PsColors.Accent,
@@ -165,20 +133,12 @@ fun UpdateRow(
                     )
                 }
             }
-        }
-
-        if (state is UpdateState.NeedsPermission) {
-            Spacer(Modifier.height(12.dp))
-            Button(
-                onClick = onGrantPermission,
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PsColors.Accent,
-                    contentColor = PsColors.Ink900,
-                ),
-            ) {
-                Text(stringResource(R.string.update_grant_permission), fontWeight = FontWeight.SemiBold)
-            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.update_open_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = PsColors.TextTertiary,
+            )
         }
     }
 }
@@ -186,7 +146,7 @@ fun UpdateRow(
 @Composable
 private fun StatusIcon(state: UpdateState) {
     when (state) {
-        is UpdateState.Checking, is UpdateState.Verifying, is UpdateState.Downloading ->
+        is UpdateState.Checking ->
             CircularProgressIndicator(
                 modifier = Modifier.size(19.dp),
                 strokeWidth = 2.dp,
@@ -199,7 +159,7 @@ private fun StatusIcon(state: UpdateState) {
         is UpdateState.Failed ->
             Icon(Icons.Rounded.ErrorOutline, null, tint = PsColors.Danger, modifier = Modifier.size(19.dp))
 
-        is UpdateState.Available, is UpdateState.Installing, is UpdateState.NeedsPermission ->
+        is UpdateState.Available ->
             Icon(Icons.Rounded.CloudDownload, null, tint = PsColors.Accent, modifier = Modifier.size(19.dp))
 
         UpdateState.Idle ->
@@ -213,14 +173,7 @@ private fun statusText(state: UpdateState, currentVersion: String): String = whe
     UpdateState.Checking -> stringResource(R.string.update_checking)
     UpdateState.UpToDate -> stringResource(R.string.update_up_to_date)
     is UpdateState.Available -> stringResource(R.string.update_available, state.release.versionName)
-    is UpdateState.Downloading ->
-        stringResource(R.string.update_downloading, (state.progress * 100).toInt())
-    is UpdateState.Verifying -> stringResource(R.string.update_verifying)
-    is UpdateState.Installing -> stringResource(R.string.update_installing)
-    is UpdateState.NeedsPermission -> stringResource(R.string.update_needs_permission)
     is UpdateState.Failed -> when (state.reason) {
         UpdateState.Reason.NETWORK -> stringResource(R.string.update_failed_network)
-        UpdateState.Reason.SIGNATURE -> stringResource(R.string.update_failed_signature)
-        UpdateState.Reason.INSTALL -> stringResource(R.string.update_failed_install)
     }
 }

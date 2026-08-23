@@ -119,11 +119,7 @@ private fun PsMobileApp(
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                browser.refresh()
-                // Coming back from the system installer is how we learn the outcome.
-                viewModel.updates.refreshInstallOutcome()
-            }
+            if (event == Lifecycle.Event.ON_RESUME) browser.refresh()
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -203,13 +199,11 @@ private fun PsMobileApp(
                     onClearRecents = viewModel::clearRecents,
                     onClearPreviewCache = { DocumentPreviews.clear() },
                     onCheckUpdates = { viewModel.updates.check(force = true) },
-                    onInstallUpdate = {
-                        val available = viewModel.updates.state
-                        val release = (available as? UpdateState.Available)?.release
-                            ?: (available as? UpdateState.NeedsPermission)?.release
-                        if (release != null) viewModel.updates.installUpdate(release)
+                    onOpenRelease = {
+                        (viewModel.updates.state as? UpdateState.Available)?.release?.let {
+                            viewModel.updates.openRelease(context, it)
+                        }
                     },
-                    onGrantInstallPermission = { viewModel.updates.grantInstallPermission(context) },
                     onDismissUpdate = viewModel.updates::dismiss,
                 )
             }
