@@ -158,6 +158,16 @@ random-access path is verified at depth.
 ./gradlew :psdcore:test
 ```
 
+And to time both render paths against each other on a real document:
+
+```bash
+./gradlew :psdcore:benchmarkPsd -Ppsd=/path/to/file.psb
+```
+
+It reports medians after a warm-up, the allocation each path costs, and how far the layer
+compositor drifts from the flattened preview — the last one matters, because a fast renderer
+that disagrees with Photoshop is not an optimisation.
+
 ---
 
 ## File access

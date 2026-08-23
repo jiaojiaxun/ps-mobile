@@ -36,6 +36,13 @@ class ChannelPlane(
         return offs[y]
     }
 
+    /**
+     * Roughly how much memory this plane holds on to. The scanline index of a full-canvas layer
+     * in a tall document runs to megabytes, which is what a cache has to budget against.
+     */
+    val retainedBytes: Long
+        get() = (rowOffsets?.size?.toLong() ?: 0L) * Long.SIZE_BYTES
+
     /** True when scanlines can be fetched independently, which is what tiled rendering needs. */
     val isRandomAccess: Boolean
         get() = compression == Compression.RAW || (compression == Compression.RLE && rowOffsets != null)

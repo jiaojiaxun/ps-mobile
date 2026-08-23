@@ -41,3 +41,17 @@ tasks.register<JavaExec>("renderPsd") {
         listOf(input, outPath.get())
     }
 }
+
+/** Times both render paths on a real document, for judging optimisation work. */
+tasks.register<JavaExec>("benchmarkPsd") {
+    group = "verification"
+    description = "Times composite and layer tile decoding. Usage: -Ppsd=<path>"
+    mainClass.set("com.psmobile.psd.tools.BenchmarkCliKt")
+    classpath = sourceSets["main"].runtimeClasspath
+    jvmArgs("-Xmx2g")
+
+    val psdPath = providers.gradleProperty("psd")
+    argumentProviders.add {
+        listOf(psdPath.orNull ?: throw GradleException("Pass -Ppsd=<path to .psd/.psb>"))
+    }
+}

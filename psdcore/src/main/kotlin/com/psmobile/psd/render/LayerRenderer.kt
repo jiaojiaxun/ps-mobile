@@ -47,10 +47,16 @@ class LayerRenderer(private val doc: PsdDocument) {
         flatten(doc.layerTree, parentVisible = true, parentOpacity = 255, visibility = visibility, out = this)
     }
 
-    fun newDecoder(order: List<DrawItem> = drawOrder): LayerRegionDecoder =
-        LayerRegionDecoder(doc, rasterizer, order)
+    /**
+     * @param maxSupersample samples per axis when a level covers more than one source pixel per
+     *   output pixel. Matches the flattened-composite renderer so the two paths look alike.
+     */
+    fun newDecoder(
+        order: List<DrawItem> = drawOrder,
+        maxSupersample: Int = LayerImage.DEFAULT_SUPERSAMPLE,
+    ): LayerRegionDecoder = LayerRegionDecoder(rasterizer, order, maxSupersample)
 
-    /** Renders a single layer on its own, used for the layer-panel thumbnails. */
+    /** Renders a single layer on its own, used for the layer-panel previews. */
     fun renderLayerThumbnail(layer: Layer, maxSize: Int): Thumbnail? {
         if (layer.isEmpty) return null
         val step = maxOf(
@@ -63,8 +69,9 @@ class LayerRenderer(private val doc: PsdDocument) {
         val w = TilePyramid.ceilDiv(layer.width, step)
         val h = TilePyramid.ceilDiv(layer.height, step)
         if (w <= 0 || h <= 0) return null
+        val image = rasterizer.imageFor(layer) ?: return null
         val pixels = IntArray(w * h)
-        val ok = rasterizer.decodeLayer(layer, layer.left, layer.top, step, w, h, pixels)
+        val ok = image.decodeInto(pixels, w, h, layer.left, layer.top, step)
         return if (ok) Thumbnail(w, h, pixels) else null
     }
 
@@ -91,13 +98,19 @@ class LayerRenderer(private val doc: PsdDocument) {
     }
 }
 
-/** Stateful decoder for [LayerRenderer]; one per worker thread. */
+/**
+ * Stateful decoder for [LayerRenderer]; one per worker thread.
+ *
+ * Holds a [LayerImage] per layer so that the scanline buffers and read-ahead windows survive
+ * from tile to tile instead of being rebuilt for each one.
+ */
 class LayerRegionDecoder internal constructor(
-    private val doc: PsdDocument,
     private val rasterizer: LayerRasterizer,
     private val drawOrder: List<DrawItem>,
+    private val maxSupersample: Int = LayerImage.DEFAULT_SUPERSAMPLE,
 ) : TileDecoder {
-    private var scratch = IntArray(0)
+
+    private val images = HashMap<Int, LayerImage?>(drawOrder.size.coerceAtMost(256))
 
     override fun decodeRegion(
         srcX: Int,
@@ -110,7 +123,6 @@ class LayerRegionDecoder internal constructor(
     ): Boolean {
         if (outW <= 0 || outH <= 0) return false
         java.util.Arrays.fill(out, 0, outW * outH, 0)
-        if (scratch.size < outW * outH) scratch = IntArray(outW * outH)
 
         val regionRight = srcX + outW * step
         val regionBottom = srcY + outH * step
@@ -118,25 +130,22 @@ class LayerRegionDecoder internal constructor(
         for (item in drawOrder) {
             if (isCancelled()) return false
             val l = item.layer
+            // Cheap rejection first: most layers of a long document miss any given tile.
             if (l.right <= srcX || l.left >= regionRight || l.bottom <= srcY || l.top >= regionBottom) continue
-            if (!rasterizer.decodeLayer(l, srcX, srcY, step, outW, outH, scratch, isCancelled)) continue
 
-            val n = outW * outH
-            val mode = item.blendMode
-            val opacity = item.opacity
-            if (mode == BlendMode.NORMAL && opacity == 255 && !item.clipping) {
-                for (i in 0 until n) {
-                    val s = scratch[i]
-                    if (s ushr 24 == 0) continue
-                    out[i] = if (s ushr 24 == 0xFF) s else Blending.composite(s, out[i], mode, 255, false)
-                }
-            } else {
-                for (i in 0 until n) {
-                    val s = scratch[i]
-                    if (s ushr 24 == 0) continue
-                    out[i] = Blending.composite(s, out[i], mode, opacity, item.clipping)
-                }
-            }
+            val image = images.getOrPut(l.index) { rasterizer.imageFor(l, maxSupersample) } ?: continue
+            image.blendInto(
+                out = out,
+                outW = outW,
+                outH = outH,
+                srcX = srcX,
+                srcY = srcY,
+                step = step,
+                blendMode = item.blendMode,
+                opacity = item.opacity,
+                clipping = item.clipping,
+                isCancelled = isCancelled,
+            )
         }
         return true
     }

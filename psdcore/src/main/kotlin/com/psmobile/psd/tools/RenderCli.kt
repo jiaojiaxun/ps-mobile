@@ -112,6 +112,18 @@ fun main(args: Array<String>) {
         outH = minOf(TilePyramidCeil(doc.height, midStep), 2400),
     )
 
+    // The same regions through the layer compositor, so the two paths can be compared by eye.
+    if (LayerRenderer(doc).isAvailable) {
+        val layerDecoder = LayerRenderer(doc).newDecoder()
+        writeRegion(layerDecoder, outDir, "layers-crop-top", doc, 0, 0, 1, minOf(doc.width, 900), cropH)
+        writeRegion(
+            layerDecoder, outDir, "layers-zoomed-L$midLevel", doc,
+            srcX = 0, srcY = 0, step = midStep,
+            outW = minOf(TilePyramidCeil(doc.width, midStep), 1200),
+            outH = minOf(TilePyramidCeil(doc.height, midStep), 2400),
+        )
+    }
+
     println()
     println("Wrote PNGs to ${outDir.absolutePath}")
     doc.close()
@@ -120,7 +132,7 @@ fun main(args: Array<String>) {
 private fun TilePyramidCeil(a: Int, b: Int) = (a + b - 1) / b
 
 private fun writeRegion(
-    decoder: com.psmobile.psd.render.RegionDecoder,
+    decoder: com.psmobile.psd.render.TileDecoder,
     outDir: File,
     name: String,
     doc: PsdDocument,
@@ -133,7 +145,7 @@ private fun writeRegion(
     if (outW <= 0 || outH <= 0) return
     val pixels = IntArray(outW * outH)
     val t = System.nanoTime()
-    decoder.decodeRegion(srcX, srcY, step, outW, outH, pixels)
+    decoder.decodeRegion(srcX, srcY, step, outW, outH, pixels) { false }
     val ms = (System.nanoTime() - t) / 1_000_000
     val img = BufferedImage(outW, outH, BufferedImage.TYPE_INT_ARGB)
     img.setRGB(0, 0, outW, outH, pixels, 0, outW)

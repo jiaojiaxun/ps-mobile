@@ -1,6 +1,8 @@
 package com.psmobile.document
 
 import android.graphics.Bitmap
+import android.os.SystemClock
+import android.util.Log
 import android.util.LruCache
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -98,7 +100,11 @@ class TileEngine(
 
     private fun newDecoder(): TileDecoder {
         val order = drawOrder
-        return if (order != null) layerRenderer.newDecoder(order) else compositeRenderer.newDecoder(supersample)
+        return if (order != null) {
+            layerRenderer.newDecoder(order, supersample)
+        } else {
+            compositeRenderer.newDecoder(supersample)
+        }
     }
 
     fun tile(key: TileKey): Bitmap? = pinned[key] ?: cache[key]
@@ -147,6 +153,7 @@ class TileEngine(
      * from the very first frame. There are only a handful of tiles at the top of the pyramid.
      */
     suspend fun primeOverview(force: Boolean = false) = withContext(Dispatchers.IO) {
+        val startedAt = SystemClock.elapsedRealtime()
         val level = pyramid.maxLevel
         for (row in 0 until pyramid.rows(level)) {
             for (col in 0 until pyramid.cols(level)) {
@@ -157,6 +164,7 @@ class TileEngine(
             }
         }
         generation++
+        Log.i(TAG, "overview primed from $source in ${SystemClock.elapsedRealtime() - startedAt} ms")
     }
 
     /** Queues [keys] for decoding, nearest-first, and drops work for anything no longer wanted. */
@@ -262,6 +270,7 @@ class TileEngine(
     }
 
     companion object {
+        private const val TAG = "PsTileEngine"
         private const val WORKERS = 3
 
         /** Past this width-to-height ratio a fitted thumbnail stops being legible. */
