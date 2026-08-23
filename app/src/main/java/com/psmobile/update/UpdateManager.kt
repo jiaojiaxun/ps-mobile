@@ -66,7 +66,9 @@ class UpdateManager(
         state = UpdateState.Checking
         job = scope.launch {
             val release = GitHubReleases.fetchLatest()
-            lastCheck = System.currentTimeMillis()
+            // Only a check that actually reached GitHub counts, otherwise a single failure
+            // would silence the automatic check for the whole interval.
+            if (release != null) lastCheck = System.currentTimeMillis()
             state = when {
                 release == null ->
                     if (force) UpdateState.Failed(UpdateState.Reason.NETWORK) else UpdateState.Idle
