@@ -4,7 +4,10 @@
 
 Tiles/DocumentSession own the state, DocumentCanvas splits the gesture,
 ViewerScreen shows the move bar, LayersPanel gains the entry button.
-Also appends the four move strings to all three locales.
+
+A committed move must force the LAYERS path: with a flattened preview in the
+file and no visibility override, `effective` would otherwise collapse to null
+and the composite would silently discard the offsets (caught in review).
 
 Every anchor must match exactly once; anything else prints ::error and exits 1.
 """
@@ -89,9 +92,14 @@ replace(
 
     private fun rebuildDrawOrder() {
         // With no flattened preview in the file there is nothing to fall back to, so the
-        // as-saved visibility still has to go through the layer compositor.
-        val effective = visibilityOverride
-            ?: if (compositeUnavailable) LayerVisibility.AS_SAVED else null
+        // as-saved visibility still has to go through the layer compositor. A committed move
+        // has the same requirement: the flattened preview cannot show it.
+        val effective = when {
+            visibilityOverride != null -> visibilityOverride
+            layerOffsets.isNotEmpty() -> LayerVisibility.AS_SAVED
+            compositeUnavailable -> LayerVisibility.AS_SAVED
+            else -> null
+        }
         val offsets: LayerOffsets = if (layerOffsets.isEmpty()) {
             LayerOffsets.NONE
         } else {
