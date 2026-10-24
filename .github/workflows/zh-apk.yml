@@ -30,7 +30,13 @@ jobs:
         run: python3 scripts/zh/apply_move.py
 
       - name: Unit tests
-        run: ./gradlew :psdcore:test --no-daemon
+        run: |
+          set +e
+          ./gradlew :psdcore:test --console=plain --no-daemon 2>&1 | tee /tmp/test.log
+          status=${PIPESTATUS[0]}
+          grep -E "^e: " /tmp/test.log | head -30 | while IFS= read -r line; do echo "::error::$line"; done
+          grep -E "FAILED|AssertionError|error:" /tmp/test.log | head -20 | while IFS= read -r line; do echo "::error::$line"; done
+          exit $status
 
       - name: Assemble release APK
         run: ./gradlew :app:assembleRelease --no-daemon
