@@ -3,14 +3,11 @@
 """Layer move: psdcore part.
 
 DrawItem carries dx/dy; LayerRegionDecoder rejects and blends against shifted
-bounds; LayerImage folds the shift into left/top while its scanline reads stay
-at the layer's own rows.
+bounds; LayerImage folds the shift into left/top/alphaAt while its scanline
+reads stay at the layer's own rows.
 
-buildDrawOrder gets a two-argument OVERLOAD rather than a default argument: a
-`fun interface` last parameter captures trailing-lambda calls that mean the
-visibility rule (this is what broke run #6).
-
-Every anchor must match exactly once; anything else prints ::error and exits 1.
+buildDrawOrder gets a two-argument OVERLOAD, not a default argument: a
+`fun interface` last parameter captures trailing lambdas (run #6).
 """
 import pathlib
 import sys
@@ -36,7 +33,6 @@ def replace(name, path, anchor, replacement):
 LR = "psdcore/src/main/kotlin/com/psmobile/psd/render/LayerRenderer.kt"
 LI = "psdcore/src/main/kotlin/com/psmobile/psd/render/LayerImage.kt"
 
-# 1. DrawItem + packed offsets.
 replace(
     "draw-item",
     LR,
@@ -65,7 +61,6 @@ replace(
     "}",
 )
 
-# 2. As-saved order, no offsets.
 replace(
     "draw-order-init",
     LR,
@@ -73,7 +68,6 @@ replace(
     "    val drawOrder: List<DrawItem> = buildDrawOrder(LayerVisibility.AS_SAVED, LayerOffsets.NONE)",
 )
 
-# 3. Overload instead of a default argument, so `buildDrawOrder { ... }` still means visibility.
 replace(
     "build-draw-order",
     LR,
@@ -99,7 +93,6 @@ replace(
     }""",
 )
 
-# 4. flatten signature.
 replace(
     "flatten-signature",
     LR,
@@ -114,7 +107,6 @@ replace(
     ) {""",
 )
 
-# 5. Recursion.
 replace(
     "flatten-recursion",
     LR,
@@ -122,7 +114,6 @@ replace(
     "                flatten(node.children, visible, opacity, visibility, offsets, out)",
 )
 
-# 6. Item construction.
 replace(
     "flatten-item",
     LR,
@@ -138,7 +129,6 @@ replace(
     "                )",
 )
 
-# 7. Rejection against shifted bounds.
 replace(
     "decode-region-bounds",
     LR,
@@ -156,7 +146,6 @@ replace(
             }""",
 )
 
-# 8. Offset down to the image.
 replace(
     "decode-region-blend",
     LR,
@@ -170,7 +159,6 @@ replace(
             )""",
 )
 
-# 9. blendInto takes the offset and works in shifted coordinates.
 replace(
     "blend-into-signature",
     LI,
@@ -201,7 +189,6 @@ replace(
         // Output pixels whose source coordinate falls inside the layer.""",
 )
 
-# 10. Bounds arithmetic.
 replace(
     "blend-into-bounds",
     LI,
@@ -215,7 +202,7 @@ replace(
         val lastCol = minOf(outW - 1, floorDiv(right - 1 - srcX, step))""",
 )
 
-# 11. Dispatch: 15 args to blendExact, 18 to blendFiltered.
+# 16 args to blendExact, 20 to blendFiltered.
 replace(
     "blend-into-dispatch",
     LI,
@@ -227,17 +214,16 @@ replace(
     """        return if (step <= 1 || maxSupersample <= 1) {
             blendExact(
                 out, outW, srcX, srcY, step, firstRow, lastRow, firstCol, lastCol,
-                blendMode, opacity, clipping, left, offsetY, isCancelled,
+                blendMode, opacity, clipping, left, offsetX, offsetY, isCancelled,
             )
         } else {
             blendFiltered(
                 out, outW, srcX, srcY, step, firstRow, lastRow, firstCol, lastCol,
-                blendMode, opacity, clipping, left, right, top, bottom, offsetY, isCancelled,
+                blendMode, opacity, clipping, left, right, top, bottom, offsetX, offsetY, isCancelled,
             )
         }""",
 )
 
-# 12. blendExact signature.
 replace(
     "blend-exact-signature",
     LI,
@@ -256,6 +242,7 @@ replace(
         opacity: Int,
         clipping: Boolean,
         left: Int,
+        offsetX: Int,
         offsetY: Int,
         isCancelled: () -> Boolean,
     ): Boolean {
@@ -267,17 +254,15 @@ replace(
             readRows(sy, offsetY)""",
 )
 
-# 13. blendExact local column.
 replace(
     "blend-exact-local-x",
     LI,
     """                val lx = sx - layer.left
                 val a = alphaAt(lx, sx)""",
     """                val lx = sx - left
-                val a = alphaAt(lx, sx)""",
+                val a = alphaAt(lx, sx, offsetX)""",
 )
 
-# 14. blendFiltered signature.
 replace(
     "blend-filtered-signature",
     LI,
@@ -313,12 +298,12 @@ replace(
         right: Int,
         top: Int,
         bottom: Int,
+        offsetX: Int,
         offsetY: Int,
         isCancelled: () -> Boolean,
     ): Boolean {""",
 )
 
-# 15. blendFiltered rows.
 replace(
     "blend-filtered-rows",
     LI,
@@ -330,17 +315,18 @@ replace(
                 readRows(sy, offsetY)""",
 )
 
-# 16. blendFiltered columns.
+# Column range + local x + mask-aware alpha in one go.
 replace(
     "blend-filtered-cols",
     LI,
     """                            if (sx < layer.left || sx >= layer.right) continue
-                            val lx = sx - layer.left""",
+                            val lx = sx - layer.left
+                            val a = alphaAt(lx, sx)""",
     """                            if (sx < left || sx >= right) continue
-                            val lx = sx - left""",
+                            val lx = sx - left
+                            val a = alphaAt(lx, sx, offsetX)""",
 )
 
-# 17. Fast RGB loop takes the bounds as parameters.
 replace(
     "accumulate-signature",
     LI,
@@ -364,7 +350,6 @@ replace(
         val alphaBytes = alphaRow""",
 )
 
-# 18. Its call site: 11 arguments.
 replace(
     "accumulate-call",
     LI,
@@ -372,7 +357,6 @@ replace(
     "                    accumulateRgb8(acc, n, stride, firstCol, lastCol, srcX, step, ss, sub, left, right)",
 )
 
-# 19. readRows carries the vertical shift.
 replace(
     "read-rows-signature",
     LI,
@@ -382,12 +366,25 @@ replace(
         val ly = sy - layer.top - offsetY""",
 )
 
-# 20. The mask travels with its layer.
 replace(
     "read-rows-mask",
     LI,
     "            val my = sy - maskTop",
     "            val my = sy - maskTop - offsetY",
+)
+
+# The mask is part of the layer: its horizontal lookup has to travel too.
+replace(
+    "alpha-at-signature",
+    LI,
+    """    private fun alphaAt(lx: Int, sx: Int): Int {
+        var a = if (alphaRow != null) sampler.sample(alphaRow, lx) else 255
+        if (maskRow != null) {
+            val mx = sx - maskLeft""",
+    """    private fun alphaAt(lx: Int, sx: Int, offsetX: Int = 0): Int {
+        var a = if (alphaRow != null) sampler.sample(alphaRow, lx) else 255
+        if (maskRow != null) {
+            val mx = sx - maskLeft - offsetX""",
 )
 
 if failures:
