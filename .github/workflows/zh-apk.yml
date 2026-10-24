@@ -29,6 +29,9 @@ jobs:
       - name: Apply layer-move patch
         run: python3 scripts/zh/apply_move.py
 
+      - name: Apply layer-move app patch
+        run: python3 scripts/zh/apply_move_app.py
+
       - name: Unit tests
         run: |
           set +e
