@@ -2,11 +2,15 @@
 # -*- coding: utf-8 -*-
 """Layer move: psdcore part.
 
-Adds a per-layer translation to the compositor:
-  DrawItem  carries dx/dy;  LayerRegionDecoder rejects and blends against the
-  shifted bounds;  LayerImage samples with the shift folded into left/top.
+DrawItem carries dx/dy; LayerRegionDecoder rejects and blends against shifted
+bounds; LayerImage folds the shift into left/top while its scanline reads stay
+at the layer's own rows.
 
-Every anchor must match exactly once; anything else prints a ::error and exits 1.
+buildDrawOrder gets a two-argument OVERLOAD rather than a default argument: a
+`fun interface` last parameter captures trailing-lambda calls that mean the
+visibility rule (this is what broke run #6).
+
+Every anchor must match exactly once; anything else prints ::error and exits 1.
 """
 import pathlib
 import sys
@@ -32,7 +36,7 @@ def replace(name, path, anchor, replacement):
 LR = "psdcore/src/main/kotlin/com/psmobile/psd/render/LayerRenderer.kt"
 LI = "psdcore/src/main/kotlin/com/psmobile/psd/render/LayerImage.kt"
 
-# 1. DrawItem gains the offset, plus a zero-allocation way to pass offsets in.
+# 1. DrawItem + packed offsets.
 replace(
     "draw-item",
     LR,
@@ -61,7 +65,7 @@ replace(
     "}",
 )
 
-# 2. The as-saved draw order uses no offsets.
+# 2. As-saved order, no offsets.
 replace(
     "draw-order-init",
     LR,
@@ -69,16 +73,20 @@ replace(
     "    val drawOrder: List<DrawItem> = buildDrawOrder(LayerVisibility.AS_SAVED, LayerOffsets.NONE)",
 )
 
-# 3. buildDrawOrder threads the offsets through. Cockroach: 155 keys stay untouched.
+# 3. Overload instead of a default argument, so `buildDrawOrder { ... }` still means visibility.
 replace(
     "build-draw-order",
     LR,
     """    fun buildDrawOrder(visibility: LayerVisibility): List<DrawItem> = buildList {
         flatten(doc.layerTree, parentVisible = true, parentOpacity = 255, visibility = visibility, out = this)
     }""",
-    """    fun buildDrawOrder(
+    """    fun buildDrawOrder(visibility: LayerVisibility): List<DrawItem> =
+        buildDrawOrder(visibility, LayerOffsets.NONE)
+
+    /** Same order with per-layer translations applied. */
+    fun buildDrawOrder(
         visibility: LayerVisibility,
-        offsets: LayerOffsets = LayerOffsets.NONE,
+        offsets: LayerOffsets,
     ): List<DrawItem> = buildList {
         flatten(
             nodes = doc.layerTree,
@@ -114,7 +122,7 @@ replace(
     "                flatten(node.children, visible, opacity, visibility, offsets, out)",
 )
 
-# 6. DrawItem construction carries the offset.
+# 6. Item construction.
 replace(
     "flatten-item",
     LR,
@@ -130,7 +138,7 @@ replace(
     "                )",
 )
 
-# 7. Rejection and blending use the shifted bounds.
+# 7. Rejection against shifted bounds.
 replace(
     "decode-region-bounds",
     LR,
@@ -148,7 +156,7 @@ replace(
             }""",
 )
 
-# 8. Pass the offset down to the layer image.
+# 8. Offset down to the image.
 replace(
     "decode-region-blend",
     LR,
@@ -162,7 +170,7 @@ replace(
             )""",
 )
 
-# 9. blendInto accepts the offset and works in shifted coordinates.
+# 9. blendInto takes the offset and works in shifted coordinates.
 replace(
     "blend-into-signature",
     LI,
@@ -183,8 +191,8 @@ replace(
     ): Boolean {
         if (opacity <= 0) return true
 
-        // Shifted bounds: the layer reads its own scanlines at the unshifted position, but
-        // every coordinate that decides *where* it lands has to carry the move offset.
+        // Shifted bounds: the scanlines stay at the layer's own rows, but every coordinate
+        // that decides *where* the pixels land carries the move offset.
         val left = layer.left + offsetX
         val right = layer.right + offsetX
         val top = layer.top + offsetY
@@ -193,7 +201,7 @@ replace(
         // Output pixels whose source coordinate falls inside the layer.""",
 )
 
-# 10. Bounds arithmetic uses the locals.
+# 10. Bounds arithmetic.
 replace(
     "blend-into-bounds",
     LI,
@@ -207,7 +215,7 @@ replace(
         val lastCol = minOf(outW - 1, floorDiv(right - 1 - srcX, step))""",
 )
 
-# 11. Dispatch passes the shift through.
+# 11. Dispatch: 15 args to blendExact, 18 to blendFiltered.
 replace(
     "blend-into-dispatch",
     LI,
@@ -219,7 +227,7 @@ replace(
     """        return if (step <= 1 || maxSupersample <= 1) {
             blendExact(
                 out, outW, srcX, srcY, step, firstRow, lastRow, firstCol, lastCol,
-                blendMode, opacity, clipping, left, top, offsetY, isCancelled,
+                blendMode, opacity, clipping, left, offsetY, isCancelled,
             )
         } else {
             blendFiltered(
@@ -229,7 +237,7 @@ replace(
         }""",
 )
 
-# 12. blendExact signature + row read.
+# 12. blendExact signature.
 replace(
     "blend-exact-signature",
     LI,
@@ -248,7 +256,6 @@ replace(
         opacity: Int,
         clipping: Boolean,
         left: Int,
-        top: Int,
         offsetY: Int,
         isCancelled: () -> Boolean,
     ): Boolean {
@@ -260,7 +267,7 @@ replace(
             readRows(sy, offsetY)""",
 )
 
-# 13. blendExact reads the layer column relative to the shifted left edge.
+# 13. blendExact local column.
 replace(
     "blend-exact-local-x",
     LI,
@@ -311,7 +318,7 @@ replace(
     ): Boolean {""",
 )
 
-# 15. blendFiltered row range and read.
+# 15. blendFiltered rows.
 replace(
     "blend-filtered-rows",
     LI,
@@ -323,7 +330,7 @@ replace(
                 readRows(sy, offsetY)""",
 )
 
-# 16. blendFiltered column range.
+# 16. blendFiltered columns.
 replace(
     "blend-filtered-cols",
     LI,
@@ -333,7 +340,7 @@ replace(
                             val lx = sx - left""",
 )
 
-# 17. The fast RGB loop takes the shifted bounds.
+# 17. Fast RGB loop takes the bounds as parameters.
 replace(
     "accumulate-signature",
     LI,
@@ -357,7 +364,7 @@ replace(
         val alphaBytes = alphaRow""",
 )
 
-# 18. Its call site.
+# 18. Its call site: 11 arguments.
 replace(
     "accumulate-call",
     LI,
@@ -365,7 +372,7 @@ replace(
     "                    accumulateRgb8(acc, n, stride, firstCol, lastCol, srcX, step, ss, sub, left, right)",
 )
 
-# 19. readRows carries the vertical shift, so the source scanline stays the layer's own row.
+# 19. readRows carries the vertical shift.
 replace(
     "read-rows-signature",
     LI,
@@ -375,7 +382,7 @@ replace(
         val ly = sy - layer.top - offsetY""",
 )
 
-# 20. The mask moves with its layer.
+# 20. The mask travels with its layer.
 replace(
     "read-rows-mask",
     LI,
