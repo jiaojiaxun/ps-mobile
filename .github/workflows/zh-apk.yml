@@ -32,6 +32,9 @@ jobs:
       - name: Apply layer-move app patch
         run: python3 scripts/zh/apply_move_app.py
 
+      - name: Apply layer-move ux patch
+        run: python3 scripts/zh/apply_move_ux.py
+
       - name: Unit tests
         run: |
           set +e
@@ -55,6 +58,6 @@ jobs:
           TAG="zh-rel-$VERSION"
           gh release view "$TAG" >/dev/null 2>&1 || \
             gh release create "$TAG" --title "PS Mobile $VERSION 简体中文" \
-              --notes "Simplified Chinese build of JustRin/ps-mobile @ $(git rev-parse --short HEAD). R8-minified; signed with the debug key so it installs directly."
+              --notes "Simplified Chinese build of JustRin/ps-mobile. R8-minified; signed with the debug key so it installs directly."
           gh release upload "$TAG" "$APK" --clobber
           echo "APK published: release $TAG"
